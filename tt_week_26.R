@@ -147,21 +147,24 @@ ggplot() +
 long_range <- caribou_prime %>% summarise(range(longitude, na.rm=TRUE)) 
 lat_range <- caribou_prime %>% summarise(range(latitude, na.rm=TRUE)) 
 
-ggplot() +
+graph2 <- ggplot() +
   geom_polygon(data = canada,
                aes(x = long, y = lat, group=group),
                fill="lightgray", colour = "white") +
   theme_minimal() +
   coord_map(xlim = c(-122.5, -121),
             ylim = c(54.5, 55.5)) +
-  geom_point(data = caribou_prime, aes(x = longitude, y = latitude,
-                                       colour = 'red')) +
+  geom_hoof(data = caribou_prime, aes(x = longitude, y = latitude), size = .02) +
   labs(
     title = "Movement in Real Time {frame_time}",
     subtitle = glue("Caribou: {starting_caribou$animal_id}")
   ) +
-  transition_time(timestamp) +
-  shadow_mark(past = T, future=F, alpha=0.3)
+  transition_time(timestamp) 
+
+graph2 <- animate(graph2)
+
+image_write(graph2,here::here("img","geom_hoof_example.gif"))
+
 
 # Graph 3 Lattitude ####
 caribou_prime %>%
