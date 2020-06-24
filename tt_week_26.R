@@ -163,7 +163,7 @@ graph2 <- ggplot() +
 
 graph2 <- animate(graph2)
 
-image_write(graph2,here::here("img","geom_hoof_example.gif"))
+anim_save(animation = graph2,filename = here::here("img","geom_hoof_example.gif"))
 
 
 # Graph 3 Lattitude ####
