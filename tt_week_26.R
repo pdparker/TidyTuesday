@@ -13,6 +13,7 @@ library(gganimate)
 library(geosphere)
 library(maps)
 library(ggmap)
+library(grid)
 # Specify conflicts
 conflict_prefer("View", "base")
 conflict_prefer("select", "tidylog")
@@ -21,6 +22,11 @@ conflict_prefer("group_by", "tidylog")
 conflict_prefer("arrange", "tidylog")
 conflict_prefer("filter", "tidylog")
 conflict_prefer("mutate", "tidylog")
+# Vintage 70s Style
+extrafont::font_import("~/Library/Fonts")
+pallet_70 <- c("#17224d", "#07698e","#2489a0","#f4d7ab",
+               "#f4a665","#f26a2d","#ef3c23")
+
 #load data
 tuesdata <- tidytuesdayR::tt_load(2020, week = 26)
 
@@ -55,6 +61,21 @@ caribou_prime_meta <-  tuesdata$individuals %>%
 caribou_prime_meta %>% glimpse
 
 # Graph 1 Seasonal Distance ####
+round_background <- function(p){
+  require(grid)
+  require(ggplotify)
+  g <- ggplotGrob(p)
+  bg <- g$grobs[[1]]
+  round_bg <- roundrectGrob(x=bg$x, y=bg$y, width=bg$width, height=bg$height,
+                            r=unit(0.1, "snpc"),
+                            just=bg$just, name=bg$name, gp=bg$gp, vp=bg$vp)
+  g$grobs[[1]] <- round_bg
+  g <- ggplotify::as.ggplot(g)
+  return(g)
+}
+
+
+
 plot1 <- caribou_prime %>%
   group_by(year, month) %>%
   summarise(distance = sum(distance_m, na.rm=TRUE)/1000) %>%
@@ -66,14 +87,53 @@ plot1 <- plot1 %>%
          ) 
 
 glimpse(plot1)
-
-ggplot(plot1,
+library(ggtext)
+graph1 <- ggplot(plot1,
        aes(month, distance, group = year, color = year)) + 
-  geom_line() + 
+  geom_line(lineend = "round", size = 1.2) + 
   scale_x_discrete(expand = c(0,0), breaks = month.abb) + 
-  theme_minimal() +
   coord_polar() +
-   transition_manual(year) 
+  theme(plot.background = element_rect(fill = pallet_70[[4]]),
+        panel.background = element_blank(),
+        plot.margin = margin(20, 20, 20, 20),
+        plot.title = element_text(family = "Alba Super",
+                                  size = 20, color = pallet_70[[1]],
+                                  ),
+        text=element_text(size=14,  family="Alba", color = pallet_70[[1]]),
+        legend.position = "none",
+        plot.caption = element_markdown(size = 10)
+        ) +
+  scale_color_manual(values = pallet_70[c(-4:-5)]) +
+  labs(
+    title = "Total Distance Traveled",
+    subtitle = glue("Caribou: {starting_caribou$animal_id}"),
+    y = "Distance (km)",
+    x = "Month",
+    color = "Year",
+    caption = "**Year:** <span style='color:#17224d;'>2011</span>,
+    <span style='color:#07698e;'>2012</span>,
+    <span style='color:#2489a0;'>2013</span>,
+    <span style='color:#f26a2d;'>2014</span>,
+    <span style='color:#ef3c23;'>2015</span>,
+    "
+  ) 
+
+
+graph1 <- round_background(graph1) 
+
+width = 800 
+height = 500
+
+img <- image_read(here::here("img", "Scratchy white.png"))
+pomo_bg <- magick::image_resize(img, paste0(width, "x", height, "!"))
+pomo_bg <- magick::image_crop(pomo_bg, paste0(width, "x", height))
+
+gg_fig <- magick::image_graph(width, height, bg = "transparent", pointsize = 16)
+print(graph1)
+dev.off()
+graph1 <- magick::image_composite(gg_fig, pomo_bg)
+image_write(graph1, path = here::here("img","graph1.png"), format = "png")
+dev.off()
 
 # Graph 2 Movement across Canada ####
 canada <- map_data("world", region = "Canada")

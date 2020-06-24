@@ -2,3 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+img/*.png
+.DS_Store
