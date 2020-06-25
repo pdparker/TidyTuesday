@@ -8,12 +8,16 @@ library(purrr)
 library(tidylog)
 library(lubridate)
 library(conflicted)
+library(patchwork)
+library(fuzzyjoin)
 # Project Specific
 library(gganimate)
 library(geosphere)
 library(maps)
 library(ggmap)
 library(grid)
+library(cowplot)
+library(sf)
 # Specify conflicts
 conflict_prefer("View", "base")
 conflict_prefer("select", "tidylog")
@@ -29,6 +33,7 @@ pallet_70 <- c("#17224d", "#07698e","#2489a0","#f4d7ab",
 
 #load data
 tuesdata <- tidytuesdayR::tt_load(2020, week = 26)
+
 
 # Data Munging ####
 # Start with Caribou with most data
@@ -163,8 +168,18 @@ graph2 <- ggplot() +
 
 graph2 <- animate(graph2)
 
-anim_save(animation = graph2,filename = here::here("img","geom_hoof_example.gif"))
+wolf <- image_read(here::here("img", "wolf.png") )
+wolf <- magick::image_resize(wolf, paste0(480, "x", 480, "!"))
+wolf <- magick::image_crop(wolf, paste0(480, "x", 480))
 
+anim_save(animation = graph2,
+          filename = here::here("img","geom_hoof_example.gif"))
+
+plot <- image_read(here::here("img", "geom_hoof_example.gif"))
+
+
+anim_save(animation = c(plot, wolf, wolf), 
+          filename = here::here("img","geom_hoof_example_2.gif"))
 
 # Graph 3 Lattitude ####
 caribou_prime %>%
@@ -188,3 +203,98 @@ caribou_prime %>%
     subtitle = glue("Caribou: {starting_caribou$animal_id}")
   ) +
   transition_reveal(timestamp)
+
+
+
+# Graph 5 ####
+bc <- bcmapsdata::bc_bound
+#bc <- as.data.frame(bc$geometry)
+yogi <- c("#9dccf8","#6cb179",
+          "#9a6939","#ffd38c",
+          "#a3d29b","#000004",
+          "#f36d74")
+
+join <- tribble(
+  ~ Killer, ~ reg,
+  "Wolf", "Wolf",
+  "Bear", "Grizzly"
+)
+
+
+bear_attacks <- tuesdata$individuals %>% 
+  regex_inner_join(join, by = c(death_cause = "reg")) %>%
+  filter(Killer %in% c("Wolf", "Bear"))
+
+attack_bears <- tuesdata$locations %>%
+  filter(animal_id %in% bear_attacks$animal_id) %>%
+  tidylog::left_join(.,bear_attacks, by = "animal_id")
+
+sites <- st_as_sf(attack_bears[,c("longitude", "latitude")],
+                  coords = c("longitude", "latitude"), 
+                  crs = 4326, agr = "constant") %>%
+  st_transform(crs = 3005)
+
+
+
+attack_bears <- attack_bears %>%
+  bind_cols(.,sites %>% st_coordinates() %>% as.data.frame())
+
+
+yogi_img <- image_read(here::here("img","yogi2.png"))
+
+plot_box <- tibble(xmin = 1045290,
+                   xmax = 1477030,
+                   ymin = 1000000,
+                   ymax = 1320232,
+                   xrange = xmax - xmin,
+                   yrange = ymax - ymin)
+
+
+graph5 <- ggplot(bc) +
+  geom_sf(color = "#6cb179", fill="#6cb179") +
+  geom_path(data = attack_bears,
+            aes(x=X, y=Y, group = animal_id, color = Killer)) +
+  scale_color_manual(values = yogi[3:4]) +
+  coord_sf(xlim = c(1045290, 1477030), ylim = c(1000000, 1320232) ) +
+  theme_minimal()+
+  theme(panel.background =
+          element_rect(fill = "#9dccf8"),
+                       plot.title = element_text(family = "Risque",
+                                                     size = 20, color = "#f46d74"),
+        plot.subtitle  = element_text(family = "Risque",
+                                  size = 16, color = "#f46d74"),
+                       text=element_text(size=14,  family="Bubblegum Sans",
+                                                          color = "#f46d74")
+  ) +
+  labs(
+    title = "The Truth About Yogi",
+    subtitle = "Caribou Travels Before being Killed by Bears or Wolves",
+    color = "Killed By:",
+    y = "Latitude",
+    x = "Longitude"
+    ) + 
+  annotation_raster(yogi_img, 
+                    ymin = -Inf, 
+                    ymax = plot_box$ymin + plot_box$yrange*.2, 
+                    xmin = -Inf, 
+                    xmax = plot_box$xmin + plot_box$xrange * .2
+                    ) +
+  transition_reveal(timestamp)
+
+graph5 <- animate(graph5, width = 480, height = 480)
+
+wolf <- image_read(here::here("img", "wolf.png") )
+wolf <- magick::image_resize(wolf, paste0(480, "x", 480, "!"))
+wolf <- magick::image_crop(wolf, paste0(480, "x", 480))
+
+anim_save(animation = graph5,
+          filename = here::here("img","yogi.gif"))
+
+plot <- image_read(here::here("img", "yogi.gif"))
+
+
+anim_save(animation = c(plot, wolf, wolf), 
+          filename = here::here("img","yogi.gif"))
+
+
+
