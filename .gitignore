@@ -4,3 +4,5 @@
 .Ruserdata
 img/*.png
 .DS_Store
+img/*.gif
+img/*.psd
