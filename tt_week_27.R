@@ -40,20 +40,23 @@ comic <- tuesdata$comic_bechdel %>%
   
 glimpse(comic)
 
-comic %>%
+plot_1 <-comic %>%
   filter(n > 2) %>%
   ggplot(aes(x = issue, y = 0, color =`Writer 1`, size = pass_bechdel)) +
   geom_point() +
   facet_wrap(~series, ncol = 1, scales = "free") +
   dark_theme_void() +
   labs(
-    title = "Does the Marvel Comic Issue pass the Bechdel Test?",
-    color = "Writer:",
-    size = "Pass Bechdel?"
+    title = "    Does the Marvel Comic Issue pass the Bechdel Test?\n",
+    color = "Writer*:",
+    size = "Pass Bechdel?",
+    caption = "*Writers who first authored more than two issues."
   ) +
   theme(text = element_text(family = "Marvel"),
         plot.title =  element_text(family = "Bangers", face = "bold", size = 16),
         strip.text = element_text(family = 'Marvel', size = 14, face = "bold")) +
   scale_color_manual(values = kamala2)
+
+ggsave(plot = plot_1, filename = here::here("img", "week_27_plot_1.png"),width = 8, height = 7)
 
 invert_geom_defaults()
