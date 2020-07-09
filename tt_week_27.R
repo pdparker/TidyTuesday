@@ -57,6 +57,12 @@ plot_1 <-comic %>%
         strip.text = element_text(family = 'Marvel', size = 14, face = "bold")) +
   scale_color_manual(values = kamala2)
 
+<<<<<<< HEAD
 ggsave(plot = plot_1, filename = here::here("img", "week_27_plot_1.png"),width = 8, height = 7)
 
 invert_geom_defaults()
+=======
+ggsave(plot = plot_1, filename = here::here("img", "week_27_plot_1.png"),width = 10, height = 8)
+
+invert_geom_defaults()
+>>>>>>> aad23f4a41936c18852a0971196b87137edccc66
