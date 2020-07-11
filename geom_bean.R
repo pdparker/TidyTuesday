@@ -25,6 +25,7 @@ print.palette <- function(x, ...) {
 library(ggplot2)
 library(grid)
 library(EBImage)
+library(magick)
 #img <- readImage(here::here("img", "bean.png"))
 
 read_img <- function(file, color = NULL){
@@ -75,7 +76,8 @@ theme_minimal2 <- function() {theme_minimal() %+replace%
         panel.grid.major = element_line(size = 0.1, linetype = 'solid',
                                         colour = "white"), 
         panel.grid.minor = element_line(size = 0.1, linetype = 'solid',
-                                        colour = "white")
+                                        colour = "white"),
+        legend.position = "none"
   )
 }
 

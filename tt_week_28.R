@@ -12,6 +12,8 @@ library(fuzzyjoin)
 library(ggtext)
 library(broom)
 library(forcats)
+library(ggforce)
+library(ggdist)
 #Load fonts
 extrafont::font_import("~/Library/Fonts")
 extrafont::fonts()
@@ -97,4 +99,90 @@ p2 <- tuesdata$coffee_ratings %>%
 
 # Concatenate plots
 p1 + p2
-ggsave(filename = here("img","week28_plot1.png"),width = 14,height = 10, dpi = 300)
+ggsave(filename = here("img","week28_plot1.png"),width = 18,height = 10, dpi = 300)
+
+ns <- names(tuesdata$coffee_ratings)[21:29] %>%
+  str_replace(.,"_", "") %>%
+  str_to_sentence()
+
+cnts <- tuesdata$coffee_ratings %>%
+  filter(!is.na(variety)) %>%
+  mutate(variety = fct_lump(variety, 9)) %>%
+  group_by(variety) %>%
+  count
+
+myAng <-
+  seq(-40,-360,length.out = 9)
+
+# Spider graphs
+p3 <- tuesdata$coffee_ratings %>%
+  filter(!is.na(variety)) %>%
+  mutate(variety = fct_lump(variety, 9)) %>%
+  group_by(variety) %>%
+  summarise(across(aroma:sweetness, list(m = mean), .names = "{col}")) %>%
+  pivot_longer(cols = aroma:sweetness) %>%
+  mutate(cont = rep(1:9,9)) %>%
+  ggplot(aes(x=cont, y=value, group = variety, color = variety)) +
+  geom_polygon(fill=NA) +
+  coord_polar() +
+  theme_minimal2() +
+  scale_x_continuous(breaks=1:9,labels = ns) +
+  expand_limits(y=5, x = 0) +
+  facet_wrap(~variety) + 
+  geom_text(
+    data    = cnts,
+    mapping = aes(x = -Inf, y = -Inf, label = n),
+    family = "Bebas Neue",
+    size = 16,
+    alpha = .5
+  ) +
+  labs(
+    title = "Flavor Profile",
+    caption = "Number of batches tested in the cirle center",
+    y = " ",
+    x = " "
+  ) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank(),
+    axis.ticks =element_blank(),
+    axis.text.y =element_blank(),
+    axis.title=element_blank(),
+    axis.text.x=element_text(size = 10,
+                              angle = myAng)
+  )
+  
+p3
+
+p4 <- tuesdata$coffee_ratings %>%
+  filter(!is.na(variety), total_cup_points > 50) %>%
+  mutate(variety = fct_lump(variety, 9)) %>%
+  ggplot(aes(x = total_cup_points, fill = variety, color = variety)) +
+  geom_dots(alpha = .8) + 
+  theme_minimal2() +
+  coord_flip() +
+  labs(
+    title = "Total Cup Point Distribution by Variety",
+    y = "Density",
+    x=" Score"
+  ) +
+  facet_wrap(~variety) +
+  geom_text(
+    data = cnts,
+    aes(x = 65,
+        y = .55,
+        label = variety
+    ),
+    family = "Bebas Neue",
+    alpha = .5,
+    size = 10
+  ) +
+  theme(
+    strip.background = element_blank(),
+    strip.text.x = element_blank()
+  )
+
+
+
+p3 + p4  
+ggsave(filename = here("img","week28_plot2.png"),width = 16,height = 10, dpi = 300)
