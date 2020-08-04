@@ -138,7 +138,8 @@ p1 <- plot_2016 %>%
   scale_fill_manual(values = wp_col) +
   labs(title = "How European countries generated electricity in 2016") +
   theme(plot.title = element_text(family = "Merriweather Black", size = 30),
-        legend.position = 'none') +
+        legend.position = 'none',
+        plot.margin=unit(c(1,1,1,1),"cm")) +
   geom_hline(yintercept = 0) +
   geom_hline(yintercept = c(seq(-100,100, 25)), color = 'grey', alpha = .2) +
   geom_text_repel(data=label_2016, aes(y = top_2016, x = center_2016,
