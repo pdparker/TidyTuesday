@@ -29,7 +29,7 @@ tuesdata$energy_types %>%
   #View()
 tuesdata$country_totals %>% skimr::skim()
   
-  
+# Simple slope plot ####  
 tuesdata$country_totals %>%
   filter(type == 'Total net production') %>%
   mutate(country_name = case_when(
@@ -47,6 +47,7 @@ tuesdata$country_totals %>%
   geom_text_repel() + 
   theme_void()
 
+# Plot 1 ####
 per <- function(x) {x/sum(x)*100}
 
 data_2016 <- tuesdata$energy_types %>% 
@@ -107,23 +108,6 @@ rect_2016 <- tribble(
   28,30, 105,120, "Conventional thermal",
   28,30, 120,127, "Nuclear",
   28,30, 127,135, "Renewable"
-)
-
-low_percent_2016 <- tribble(
-  ~y,~x, ~label,
-  -99,-2, "100% conventional thermal energy",
-  -74,-2, "75%",
-  -49,-2, "50%",
-  -24,-2, "25%",
-  1,-2, "0%")
-
-high_percent_2016 <- tribble(
-  ~y,~x, ~label,
-  1,38, "0%",
-  26,38, "25%",
-  51,38, "50%",
-  76,38, "75%",
-  101,38, "clean electricity 100%",
 )
 
 p1 <- plot_2016 %>%
@@ -247,6 +231,85 @@ p1 +
   
 
 
-ggsave(here("img","week32.png"), width=18,height=12, dpi=300)  
+ggsave(here("img","week32.png"), width=18,height=12, dpi=300) 
+
+# Plot 2 ####
+ann_text_1 <- data.frame(country = c("AL","AL",'AL'),
+                         value = c(-4,-4,30), year = c(2016, 2018, 2017),
+                         lab = c("2016", "2018", "Avg. clean energy"),
+                         type = c('Nuclear','Nuclear','Nuclear'),
+                         col = c('black','black','grey')) %>%
+  mutate(country = factor(country, unique(tuesdata$energy_types$country)))
+
+ann_text_2 <- data.frame(country =rep('SI',3),
+                         value = c(15, 50, 85),
+                         year = rep(2017,3),
+                         type = c('Conventional thermal', 'Nuclear', 'Renewable')
+                         ) %>%
+  mutate(country = factor(country, unique(tuesdata$energy_types$country)))
+
+
+tuesdata$energy_types %>% 
+  filter(level != 'Level 2') %>%
+  mutate(country_name = case_when(
+    country == 'EL' ~ 'Greece',
+    TRUE ~ country_name
+  )) %>%
+  mutate(type = case_when(
+    type == 'Conventional thermal' ~ 'Conventional thermal',
+    type == 'Nuclear' ~ 'Nuclear',
+    TRUE ~ 'Renewable'
+  )) %>%
+  group_by(country, type) %>%
+  summarise(across(`2016`:`2018`, sum)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(across(`2016`:`2018`, list(per = per),.names = "{fn}_{col}" ) ) %>%
+  ungroup() %>%
+  select(-`2016`:-`2018`) %>%
+  pivot_longer(
+    cols = per_2016:per_2018
+  ) %>%
+  tidyr::separate(name, into = c("stat", "year"), convert=TRUE) %>% 
+  mutate(tmp = ifelse(type == 'Conventional thermal',NA,value)) %>% 
+  group_by(year) %>%
+  mutate(avg = mean(tmp, na.rm=TRUE)) %>%
+  ungroup() %>% 
+  group_by(year, country) %>%
+  mutate(clean = sum(tmp, na.rm=TRUE)) %>%
+  ungroup() %>% 
+  mutate(clean = case_when(
+    year != 2018 ~ NA_real_,
+    TRUE ~ clean
+  ),
+  country = fct_reorder(country, clean, .desc = TRUE,.fun = max)
+  ) %>% 
+  ggplot(aes(x = year, y = value, fill = type, group = type)) +
+  geom_area() +
+  geom_line(aes(y = avg, x = year), size = .1, color = 'dark grey') +
+  geom_point(aes(x = 2018, y = clean), color = 'red') +
+  geom_text(aes(x = 2018, y = clean, label = round(clean)),
+            hjust = 0, nudge_x = .1, size = 4) +
+  facet_wrap(~country) +
+  scale_fill_manual(values = wp_col) +
+  theme_void() +
+  expand_limits(y = -1.5, x = c(2015.7,2018.3) ) + 
+  geom_text(data = ann_text_1, aes(x = year, y = value, label = lab, col = col),
+            size = 4) +
+  scale_color_manual(values = c('black','black','grey')) +
+  geom_text(data = ann_text_2, aes(x = year, y = value, label = type),
+            size = 4) +
+  theme(legend.position = 'none',
+        plot.title = element_text(family = 'Montserrat', face = 'bold', size = 20),
+        plot.subtitle = element_text(family = 'Montserrat', size = 20),
+        strip.text = element_text(family = 'Montserrat', hjust = 0.15,
+                                  face= 'bold', size = 12),
+        plot.margin=unit(c(1,1,1,1),"cm")) +
+  labs(
+    title = 'Change in fuel source for electricity generation',
+    subtitle = 'Countries share of clean energy from 2016-2018\n'
+  ) +
+  geom_segment(x=2016, xend=2018, y=1, yend=1, color='black')
+ggsave(here("img","week32_2.png"), width=18,height=12, dpi=300) 
 
 
