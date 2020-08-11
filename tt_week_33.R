@@ -202,7 +202,8 @@ earth <- avatar_eawf %>%
         panel.background = element_blank(),
         plot.background = element_rect(fill = '#262c3a'),
         plot.margin=unit(c(0.5,0.5,0.5,0.5),"cm"))+
-  panel_border(remove = TRUE)
+  panel_border(remove = TRUE)+
+  coord_equal()
 
 # fire ####
 fire <- avatar_eawf %>%
@@ -221,7 +222,8 @@ fire <- avatar_eawf %>%
         panel.background = element_blank(),
         plot.background = element_rect(fill = '#262c3a'),
         plot.margin=unit(c(0.5,0.5,0.5,0.5),"cm"))+
-  panel_border(remove = TRUE)
+  panel_border(remove = TRUE) +
+  coord_equal()
 
 # air ####
 air <- avatar_eawf %>%
@@ -240,7 +242,8 @@ air <- avatar_eawf %>%
         panel.background = element_blank(),
         plot.background = element_rect(fill = '#262c3a'),
         plot.margin=unit(c(0.5,0.5,0.5,0.5),"cm"))+
-  panel_border(remove = TRUE)
+  panel_border(remove = TRUE) +
+  coord_equal()
 
 # water ####
 water <- avatar_eawf %>%
@@ -259,16 +262,17 @@ water <- avatar_eawf %>%
         panel.background = element_blank(),
         plot.background = element_rect(fill = '#262c3a'),
         plot.margin=unit(c(0.5,0.5,0.5,0.5),"cm")) +
-  panel_border(remove = TRUE)
+  panel_border(remove = TRUE)+
+  coord_equal()
 
 (earth + fire) / (air + water) + 
   plot_annotation(title = "Mentions of: <span style='color:#1aaa4b'>Earth</span>, <span style='color:#ee1b25'>Fire</span>, <span style='color:#fefac7'>Air</span>, and <span style='color:#00bef1'>Water</span>",
                   theme = theme(plot.title = element_markdown(lineheight = 1.1,color = 'white', family = 'Herculanum', size = 40))) +
   plot_layout(guides = "collect") &
-  theme(legend.position = 'right',
+  theme(legend.position = 'bottom',
         legend.spacing = unit(1.0, 'cm'),
         plot.background = element_rect(fill = '#262c3a',color='#262c3a'),
         panel.background = element_rect(fill = '#262c3a',color='#262c3a') )
 
 ggsave(filename = here('img','week33_p3.png'),
-       dpi = 300, width = 15, height = 15) 
+       dpi = 300, width = 20, height = 8) 
