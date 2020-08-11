@@ -244,7 +244,7 @@ ann_text_1 <- data.frame(country = c("AL","AL",'AL'),
 ann_text_2 <- data.frame(country =rep('SI',3),
                          value = c(15, 50, 85),
                          year = rep(2017,3),
-                         type = c('Conventional thermal', 'Nuclear', 'Renewable')
+                         type = c('Renewable','Nuclear','Conventional thermal')
                          ) %>%
   mutate(country = factor(country, unique(tuesdata$energy_types$country)))
 
@@ -307,9 +307,109 @@ tuesdata$energy_types %>%
         plot.margin=unit(c(1,1,1,1),"cm")) +
   labs(
     title = 'Change in fuel source for electricity generation',
-    subtitle = 'Countries share of clean energy from 2016-2018\n'
+    subtitle = 'Countries share of clean energy from 2016-2018\n'  
   ) +
   geom_segment(x=2016, xend=2018, y=1, yend=1, color='black')
 ggsave(here("img","week32_2.png"), width=18,height=12, dpi=300) 
+
+
+# Plot 3 ####
+tuesdata$energy_types %>% 
+  filter(level != 'Level 2') %>%
+  mutate(type = case_when(
+    type == 'Conventional thermal' ~ 'Conventional\nthermal',
+    type == 'Nuclear' ~ 'Nuclear',
+    TRUE ~ 'Renewable'
+  )) %>%
+  group_by(country, type) %>%
+  summarise(across(`2016`:`2018`, sum)) %>%
+  ungroup() %>%
+  group_by(country) %>%
+  mutate(across(`2016`:`2018`, list(per = per),.names = "{fn}_{col}" ) ) %>%
+  ungroup() %>%
+  select(-`2016`:-`2018`) %>%
+  pivot_longer(
+    cols = per_2016:per_2018
+  ) %>%
+  tidyr::separate(name, into = c("stat", "year"), convert=TRUE) %>%
+  ggplot(aes(x=country, y=value, fill = type, group = type) ) +
+  geom_area(linetype = 0) +
+  facet_wrap(~year,ncol = 1) +
+  theme_void() +
+  coord_polar(clip = 'off') +
+  scale_x_discrete(expand = c(0,0)) +
+  theme(axis.text.x = element_text(
+    angle= -90 - 360 / 37 * 1:37, hjust=1, vjust = 0),
+    legend.position = 'none',
+    strip.text = element_text(family = 'Montserrat', hjust = 0,
+                              face= 'bold', size = 20),
+    plot.title = element_text(family = 'Didot', face = 'bold',
+                              size = 24,vjust = 0, color = 'white'),
+    plot.margin=unit(c(1,2.05,1,2.05),"cm"), #top, right, bottom, left
+    axis.line.x = element_blank(),
+    text = element_text(size = 14, color = 'grey'),
+    panel.background = element_rect(fill = '#252a33', color = '#252a33'),
+    plot.background = element_rect(fill = '#252a33', color = '#252a33'),
+    plot.subtitle = element_markdown(size = 18, face = 'bold', color = 'grey')
+  ) +
+  scale_fill_manual(values = wp_col) +
+  expand_limits(y = 110) +
+  labs(title = "Energy Production by Type\n",
+       subtitle = "<span style='color:#f2f2f2'>Conventional thermal</span>,<br><span style='color:#feeab9'>Nuclear</span>, and <span style='color:#edbb58'>Renewable</span><br>") +
+  guides(fill=guide_legend(""))
+  
+ggsave(here("img","week32_3.png"), height=16,width=5.88, dpi=300) 
+
+# Plot 4 ####
+library(ggtern)
+library(hrbrthemes)
+library(gghighlight)
+tuesdata$energy_types %>% 
+  filter(level != 'Level 2') %>%
+  mutate(country_name = case_when(
+    country == 'EL' ~ 'Greece',
+    TRUE ~ country_name
+  )) %>%
+  mutate(type = case_when(
+    type == 'Conventional thermal' ~ 'Conventional thermal',
+    type == 'Nuclear' ~ 'Nuclear',
+    TRUE ~ 'Renewable'
+  )) %>%
+  group_by(country_name, type) %>%
+  summarise(across(`2016`:`2018`, sum)) %>%
+  ungroup() %>%
+  group_by(country_name) %>%
+  mutate(across(`2016`:`2018`, list(per = per),.names = "{fn}_{col}" ) ) %>%
+  ungroup() %>%
+  select(-`2016`:-`2018`) %>%
+  pivot_longer(
+    cols = per_2016:per_2018
+  ) %>%
+  tidyr::separate(name, into = c("stat", "year"), convert=TRUE) %>%
+  select(-stat) %>%
+  pivot_wider(id_cols = c(country_name, year),
+              names_from = type,
+              values_from = value) %>%
+  ggtern(aes(x=`Conventional thermal`, y=Nuclear, z=Renewable,
+             color=country_name,label=country_name)) +
+  facet_wrap(~year,ncol = 1) +
+  geom_point(size = 3) + 
+  theme_ft_rc() +
+  theme(legend.position = 'none',
+        plot.margin=unit(c(1,2,1,2),"cm"),
+        axis.title = element_blank(),
+        tern.axis.arrow.show = TRUE,
+        tern.plot.background = element_rect(fill = '#252a33'),
+        tern.panel.background = element_rect(fill = '#252a33') ) +
+  labs(title = "Energy Production by Type",
+       subtitle = "Countries with at  least some Nuclear\ntend to have more balanced energy profiles\n\n",
+       x = '',y='',z='',
+       xarrow = 'Conventional thermal',yarrow='Nuclear',zarrow='Renewable') +
+  theme_arrowlarge()
+
+ggsave(here("img","week32_4.png"), height=10,width=3.984, dpi=300) 
+
+p1 + p2
+
 
 
