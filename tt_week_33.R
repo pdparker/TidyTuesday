@@ -111,23 +111,6 @@ avatar_count <-  avatar_adjective %>%
   filter(sentiment %in% c('sadness', 'joy'), word != 'shot') %>%
   count(word,sort=TRUE, name = 'freq')
 
-# Trial Plot #### 
-# Wanted to clip to Avatar image but didn't work
-# set.seed(42)
-p6 <- ggplot(avatar_count, aes(label = word, size = freq)) +
-  geom_text_wordcloud_area(
-    mask = png::readPNG(here('img','avatar.png')),
-    rm_outside = TRUE,
-    color = '#a00000'
-  ) +
-  #scale_size_area(max_size = 8) +
-  theme_avatar(title.font = "Herculanum",
-                         text.font = "Herculanum",
-                         title.size = 10) +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank(),
-        text = element_text(family = "Herculanum"))
-
 df <- data.frame()
 avatar <- magick::image_read(here('img', 'avatar_gradient.png'))
 p4 <- ggplot(df) + geom_point() + xlim(0, 100) + ylim(0, 100) +
@@ -168,12 +151,6 @@ p5 <- p1 + p4 + p2 + p3 +
   
 ggsave(plot = p5, filename = here('img','week33_p1.png'),
        dpi = 300, width = 20, height = 15) 
-
-
-
-# ggsave(plot = p6, filename = here('img','week33_p2.png'),
-#        dpi = 300, height = 8, width = 4) 
-
 
 # Earth, Air, water, Fire ####
 avatar_eawf <- tuesdata$avatar %>% 
@@ -276,3 +253,50 @@ water <- avatar_eawf %>%
 
 ggsave(filename = here('img','week33_p3.png'),
        dpi = 300, width = 20, height = 8) 
+
+
+# Clip ####
+avatar_tidy <- tuesdata$avatar %>% 
+  unnest_tokens(word,character_words) %>%
+  mutate(word = tolower(word)) %>%
+  anti_join(get_stopwords()) %>%
+  left_join(parts_of_speech) %>%
+  filter(pos == 'Noun') %>%
+  count(word, sort=TRUE) %>%
+  slice(1:1000)
+  
+
+
+# set.seed(42)
+p6 <- ggplot(avatar_tidy, aes(label = word, size = n)) +
+  geom_text_wordcloud_area(
+    mask = png::readPNG(here('img','avatar.png')),
+    rm_outside = TRUE,
+    color = '#a00000'
+  ) +
+  #scale_size_area(max_size = 10) +
+  theme_avatar(title.font = "Herculanum",
+               text.font = "Herculanum",
+               title.size = 10) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        text = element_text(family = "Herculanum")) +
+  labs(title = 'Most used adjectives in Avatar: The Last Airbender')
+
+
+ggsave(plot = p6, filename = here('img','week33_p4.png'),
+       dpi = 300)
+
+
+wordcloud2::wordcloud2(avatar_tidy,
+           figPath = here('img','avatar.png'),
+           size = 1,
+           backgroundColor = "#282a36",
+           color = rep(c("#ff79c6",
+                         "#8be9fd",
+                         "#f8f8f2",
+                         "#bd93f9",
+                         "#6272a4"),
+                       nrow(avatar_tidy)),
+           shuffle = FALSE,
+           rotateRatio = 0.25)
