@@ -157,3 +157,78 @@ p1 + p2 +
 
 ggsave(here('img', 'week34_1.png'), dpi = 300, width = 14, height = 6)
 
+
+# Circlize Plot ####
+library(circlize) 
+library(ComplexHeatmap)
+library(countrycode)
+extrafont::loadfonts()
+
+col_fun1 = colorRamp2(c(1, 64, 127), c("blue", "white", "red"))
+
+pdf(here('img', 'week34_2.pdf'), family="Merriweather")
+circos.par(gap.after = c(2,2,2,2,2,15))
+circos.heatmap(mat1, col = col_fun1, split = split,show.sector.labels = TRUE,
+               dend.side = "inside",rownames.side = "outside")
+circos.track(track.index = 1, panel.fun = function(x, y) {
+  if(CELL_META$sector.numeric.index == 6) { # the last sector
+    cn = colnames(mat1)
+    n = length(cn)
+    circos.text(rep(CELL_META$cell.xlim[2], n) + convert_x(10, "mm"), 
+                1:n - 3, cn, 
+                cex = 0.7, facing = "inside")
+  }
+}, bg.border = NA)
+lgd = Legend(title = "N", col_fun = col_fun1, direction = 'horizontal')
+grid.draw(lgd)
+title('Most Similar Decades: Number of Threats and Actions', adj = 0, cex = 0.8)
+circos.clear()
+dev.off()
+
+
+extinct3 <- extinct %>%
+  select(continent, country, threat_AA:action_NA) %>%
+  pivot_longer(cols = threat_AA:action_NA) %>%
+  tidyr::separate(name, into=c('outcome', 'type')) %>%
+  select(-type) %>%
+  rownames_to_column() %>%
+  pivot_wider(id_cols = c(rowname,continent,country),
+              names_from = outcome, 
+              values_from = value) %>%
+  group_by(continent, country) %>%
+  summarise(threat = sum(threat,na.rm=TRUE) %>% log10,
+            action = sum(action,na.rm=TRUE) %>% log10) %>%
+  drop_na() 
+
+
+mat1 <- as.matrix(extinct3[,3:4])
+rownames(mat1) <- countrycode(extinct3$country, origin = 'country.name', 'iso3c')
+colnames(mat1) <- c('Actions','Threats')
+split <- extinct3$continent
+
+
+col_fun1 = colorRamp2(c(0, 1, 2.5), c("blue", "white", "red"))
+
+pdf(here('img', 'week34_3.pdf'), family="Merriweather")
+circos.par(gap.after = c(2,2,2,2,2,15))
+circos.heatmap(mat1, col = col_fun1, split = split,show.sector.labels = TRUE,
+               dend.side = "inside",rownames.side = "outside")
+circos.track(track.index = 1, panel.fun = function(x, y) {
+  if(CELL_META$sector.numeric.index == 6) { # the last sector
+    cn = colnames(mat1)
+    n = length(cn)
+    circos.text(rep(CELL_META$cell.xlim[2], n) + convert_x(10, "mm"), 
+                1:n-3, cn, 
+                cex = 0.7, facing = "inside")
+  }
+}, bg.border = NA)
+text(-0.25,0.3,"Most similar countries:\nNo. of threats and actions",
+     cex = .8, adj = 0.1, face = 'italic', lines = -1)
+lgd = Legend(title = "N (Log 10)", col_fun = col_fun1,
+             direction = 'horizontal',legend_width = unit(40, "mm"))
+grid.draw(lgd)
+title('Plants in Distress (< 1900 - 2020)', adj = 0, cex = 0.8)
+circos.clear()
+dev.off()
+
+
