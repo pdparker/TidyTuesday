@@ -61,12 +61,14 @@ p1 <- ggraph(words, layout = 'linear') +
                 aes(x = -1.5, y = 20), hjust = 0,maxwidth = 10, color = 'white',
                fill = NA, box.size = NA, family = 'Montserrat', size = 3) +
   labs(title = "Creativity Gone Stale?",
-       subtitle = "Co-occurance of ingedients in a season of Chopped (minimum of 5 co-occurances)") + 
+       subtitle = "Co-occurance of ingedients in a season of Chopped (minimum of 5 co-occurances)",
+       caption = '@philparker_IPPE | Week 35') + 
   theme(legend.position = 'none',
         plot.background = element_rect(fill='#1c2733', color = '#1c2733'),
         panel.background = element_rect(fill='#1c2733', color = '#1c2733'),
         plot.title = element_text(color = "white", family = "Bebas Neue", size = 24, hjust = 0.065),
         plot.subtitle = element_text(color = "white", family = "Bebas Neue", size = 14, hjust = 0.095),
+        plot.caption = element_text(color = "white", family = "Bebas Neue", size = 10, hjust = 0.95),
         plot.margin=unit(c(0.5,0.5,1,0),"cm"))
 
 ggsave(plot = p1, filename = here('img', 'week35_1.png'), dpi = 300, width = 12, height = 6)
