@@ -54,7 +54,7 @@ p1 <- ggraph(words, layout = 'linear') +
   theme_void() +
   scale_color_manual(values = rainbow(5)) +
   geom_node_text(aes(label = name), vjust = 1,
-                 hjust = 1, angle = 90, size = 3,
+                 hjust = 1, angle = 45, size = 3,
                  color = 'white', family = "Montserrat", alpha = .8) +
   scale_edge_width(range = c(.5,1.5))+
   geom_textbox(label = "kumquats and asparagus were the most common co-occurance (n = 10)", 
@@ -68,7 +68,7 @@ p1 <- ggraph(words, layout = 'linear') +
         panel.background = element_rect(fill='#1c2733', color = '#1c2733'),
         plot.title = element_text(color = "white", family = "Bebas Neue", size = 24, hjust = 0.065),
         plot.subtitle = element_text(color = "white", family = "Bebas Neue", size = 14, hjust = 0.095),
-        plot.caption = element_text(color = "white", family = "Bebas Neue", size = 10, hjust = 0.95),
+        plot.caption = element_text(color = "white", family = "Bebas Neue", size = 10, hjust = 0.95, vjust = -.5),
         plot.margin=unit(c(0.5,0.5,1,0),"cm"))
 
 ggsave(plot = p1, filename = here('img', 'week35_1.png'), dpi = 300, width = 12, height = 6)
