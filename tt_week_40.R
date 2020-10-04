@@ -89,7 +89,7 @@ lyrics %>%
   annotate("text",x = 3,y = -5, label = "Beyoncé",color = "#000040",
            family = "charlotte")
 
-ggsave(filename = here("img", "week40.png"), width = 8, height=6, dpi = 300)
+ggsave(filename = here("img", "week40.png"), width = 10, height=8, dpi = 300)
   
 
 
