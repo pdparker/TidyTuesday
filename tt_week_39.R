@@ -13,7 +13,7 @@ data <- full_join(tuesdata$peaks, tuesdata$members)
 
 randomly <- function(x) sample(xtfrm(x))
 
-set.seed(42)
+set.seed(123)
 d <- data %>%
   mutate(peak_name = str_remove(peak_name, " [IV].*")) %>%
   group_by(peak_name) %>%
@@ -61,7 +61,7 @@ d %>%
   labs(
     x = "Width of Base: Deaths",
     y = "Summit (meters)",
-    title = "Deaths by Mountain Peak",
+    title = "Himalayan Climbing Expedition Deaths",
     subtitle = "Peaks with at least 10 deaths",
     caption = "@PhilParker_IPPE, Data: Alex Cookson"
   )
