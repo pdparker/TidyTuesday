@@ -23,8 +23,8 @@ mov %>%
     z = "Int. Earnings",
     title = "Sci-Fi Movies that Pass the Bechdel Test Earn More",
     subtitle = "US Sci-Fi films from 2000",
-    color = "MetaCritic MetaScore"
-  ) +
+    color = "MetaCritic\nMetaScore"
+    ) +
   theme(strip.text = element_text(color = "#8e8e93")) 
 
 ggsave(filename = here::here("img","2021_wk11.png"), dpi=300,width = 12,height = 6)  
